@@ -39,6 +39,9 @@
   --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
 }
 *{box-sizing:border-box}
+/* Must outrank our own display rules (.field{display:flex} etc). The artifact
+   viewer injects this, so its absence only shows up on the self-hosted build. */
+[hidden]{display:none!important}
 html,body{height:100%}
 body{
   margin:0; background:var(--ground); color:var(--ink);
@@ -312,10 +315,34 @@ h1,h2,h3{text-wrap:balance;margin:0}
 @media (prefers-reduced-motion:reduce){
   *{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
 }
-@media (max-width:480px){
+@media (max-width:560px){
   .lede{font-size:22px}
   .turn.buyer .say{font-size:17px}
   .headline{font-size:20px}
+  .verdict{padding:16px}
+  .brief{padding:16px}
+  .opponent{padding:14px 16px}
+  .wrap,.topbar-in{padding-inline:16px}
+
+  /* iOS zooms the page when a focused control is under 16px. */
+  .field input[type=text],.field input[type=password],.field textarea,
+  .dock-row input[type=text]{font-size:16px}
+
+  /* Thumb-sized targets, and the two segmented controls get a row each. */
+  .seg button{padding:12px 6px}
+  .row-2{gap:18px}
+  .row-2>*{flex:1 1 100%}
+  .ptt{padding:20px}
+  .dock-meta{font-size:13px}
+  .link-btn{font-size:13px;padding-block:4px}
+  .turn{max-width:100%}
+  .moment{padding-left:13px}
+}
+
+/* Coarse pointers: no hover states, and nothing that relies on a keyboard. */
+@media (hover:none){
+  .ghost-btn:hover,.secondary:hover{border-color:var(--line)}
+  .link-btn:hover{color:var(--ink-soft)}
 }
 </style>
 
@@ -487,6 +514,12 @@ let brainReady = false;
    3. opened as a local file          -> the viewer's own key, pasted into the brief   */
 const ON_WEB = location.protocol === "http:" || location.protocol === "https:";
 let useProxy = false;
+
+/* Every browser on iOS uses WebKit, which has no SpeechRecognition — so on an
+   iPhone "try Chrome" is useless advice. Detect it to say something true. */
+const IS_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+               (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+const IS_TOUCH = matchMedia("(hover:none)").matches;
 
 async function initBrain(){
   try{
@@ -787,7 +820,9 @@ async function checkMic(){
   const line = $("micLine"), txt = $("micText");
   if(!SR){
     line.className = "sysline warn";
-    txt.textContent = "This browser has no speech recognition, so the call will run in typing mode. For voice, open it in Chrome or Edge.";
+    txt.textContent = IS_IOS
+      ? "iPhones and iPads can't do speech recognition in the browser — every iOS browser uses Safari's engine, and none of them support it. The call will run in typing mode. For voice, use an Android phone or a desktop."
+      : "This browser has no speech recognition, so the call will run in typing mode. For voice, open it in Chrome or Edge.";
     S.inputMode = "text";
     return;
   }
@@ -800,8 +835,11 @@ async function checkMic(){
     return;
   }
   line.className = "sysline";
+  const holdHint = IS_TOUCH
+    ? "Hold the bar at the bottom of the call to speak, and let go when you're done."
+    : "Hold the bar at the bottom of the call — or hold the spacebar — to speak.";
   txt.textContent = (perm && perm.state === "granted")
-    ? "Microphone ready. Hold the bar at the bottom of the call — or hold the spacebar — to speak."
+    ? "Microphone ready. " + holdHint
     : "Voice ready. Your browser will ask for the microphone the first time you hold to talk.";
 }
 
@@ -1331,10 +1369,20 @@ segWire("segLen",  v => { S.cfg.maxTurns = parseInt(v,10) || 12; });
 $("startBtn").addEventListener("click", startCall);
 
 const ptt = $("pttBtn");
-ptt.addEventListener("pointerdown", e => { e.preventDefault(); startListening(); });
-ptt.addEventListener("pointerup", e => { e.preventDefault(); stopListening(); });
+/* Capture the pointer on press so a finger sliding off the button mid-sentence
+   keeps the mic open — releasing anywhere still ends the turn. */
+ptt.addEventListener("pointerdown", e => {
+  e.preventDefault();
+  try{ ptt.setPointerCapture(e.pointerId); }catch(err){}
+  startListening();
+});
+ptt.addEventListener("pointerup", e => {
+  e.preventDefault();
+  try{ ptt.releasePointerCapture(e.pointerId); }catch(err){}
+  stopListening();
+});
 ptt.addEventListener("pointercancel", () => stopListening());
-ptt.addEventListener("pointerleave", () => { if(recOn) stopListening(); });
+ptt.addEventListener("contextmenu", e => e.preventDefault());
 
 document.addEventListener("keydown", e => {
   if(e.code !== "Space" || e.repeat) return;
