@@ -29,6 +29,18 @@ The same HTML file works in three contexts and picks whichever applies:
 
 ## Deploying
 
+Pushing to `main` deploys automatically — the repo is connected to the Vercel
+project, and every push to the default branch builds and promotes to
+production.
+
+> This only works because the repo is **public**. On a Hobby account, a deploy
+> carrying Git metadata from a *private* repo is blocked: Vercel checks the
+> commit author against project contributors, and Hobby cannot have
+> contributors on a private repo. The CLI does not report this — it prints
+> `Building…` and hangs, `vercel ls` shows `UNKNOWN`, and `vercel promote`
+> returns 422. Only the dashboard says why. If this repo ever goes private
+> again, deploy from a copy of the tree with no `.git` directory.
+
 The hosted build needs two environment variables:
 
 - `ANTHROPIC_API_KEY` — from console.anthropic.com. Never committed; it lives
