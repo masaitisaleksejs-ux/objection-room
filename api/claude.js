@@ -32,8 +32,10 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: { message: "POST only" } });
   }
 
-  const expected = process.env.ACCESS_CODE;
-  const key = process.env.ANTHROPIC_API_KEY;
+  // Trim both sides: a value piped in from a shell or pasted into the dashboard
+  // can carry a trailing newline, and the compare below is length-sensitive.
+  const expected = (process.env.ACCESS_CODE || "").trim();
+  const key = (process.env.ANTHROPIC_API_KEY || "").trim();
 
   if (!expected || !key) {
     return res.status(500).json({
@@ -41,8 +43,8 @@ export default async function handler(req, res) {
     });
   }
 
-  const supplied = req.headers["x-access-code"];
-  if (!timingSafeEqual(String(supplied || ""), expected)) {
+  const supplied = String(req.headers["x-access-code"] || "").trim();
+  if (!timingSafeEqual(supplied, expected)) {
     return res.status(401).json({ error: { message: "Bad access code" } });
   }
 
