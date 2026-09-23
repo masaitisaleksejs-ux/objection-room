@@ -495,7 +495,10 @@ async function initBrain(){
     }
   }catch(e){ sampleFn = null; }
   brainReady = true;
-  useProxy = !sampleFn && ON_WEB;
+  // window.claude exists in every artifact view, so its absence is what marks a
+  // genuinely self-hosted page. Without this, a viewer who declined sampling
+  // would fall through to a /api/claude that isn't there.
+  useProxy = !sampleFn && !window.claude && ON_WEB;
   $("keyField").hidden = !!sampleFn || useProxy;
   $("codeField").hidden = !useProxy;
   // Local copy with an empty brief: pre-fill it. The shared artifact stays blank.
