@@ -1,0 +1,1457 @@
+<title>Objection Room</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap">
+<style>
+:root{
+  --ground:#EDEFF2; --surface:#FFFFFF; --surface-2:#F6F7F9;
+  --ink:#12161C; --ink-soft:#5A646F; --ink-faint:#8B95A1;
+  --line:#D3D9E0; --line-soft:#E3E7EC;
+  --accent:#7B1E2B; --accent-ink:#FFFFFF; --accent-soft:#F4E6E8;
+  --good:#1E6E52; --good-soft:#E2F0EA;
+  --warn:#8A6410; --warn-soft:#F5EBD8;
+  --bad:#9B2C2C; --bad-soft:#F6E4E4;
+  --shadow:0 1px 2px rgba(18,22,28,.06), 0 8px 24px -12px rgba(18,22,28,.18);
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --serif:"Newsreader",Georgia,"Times New Roman",serif;
+  --mono:"IBM Plex Mono",ui-monospace,"Cascadia Mono",Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#0E1116; --surface:#171C23; --surface-2:#1E242C;
+    --ink:#E7EBF0; --ink-soft:#96A1AE; --ink-faint:#6C7783;
+    --line:#2A323C; --line-soft:#232A33;
+    --accent:#D4707E; --accent-ink:#1A0E11; --accent-soft:#2A171B;
+    --good:#4FB58B; --good-soft:#15291F;
+    --warn:#D9A441; --warn-soft:#2A2113;
+    --bad:#E06C6C; --bad-soft:#2B1616;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#0E1116; --surface:#171C23; --surface-2:#1E242C;
+  --ink:#E7EBF0; --ink-soft:#96A1AE; --ink-faint:#6C7783;
+  --line:#2A323C; --line-soft:#232A33;
+  --accent:#D4707E; --accent-ink:#1A0E11; --accent-soft:#2A171B;
+  --good:#4FB58B; --good-soft:#15291F;
+  --warn:#D9A441; --warn-soft:#2A2113;
+  --bad:#E06C6C; --bad-soft:#2B1616;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:var(--sans); font-size:15px; line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+button{font:inherit;color:inherit;cursor:pointer}
+input,textarea,select{font:inherit;color:inherit}
+h1,h2,h3{text-wrap:balance;margin:0}
+.wrap{max-width:720px;margin:0 auto;padding-inline:20px;padding-block:0}
+
+/* ---------- console header ---------- */
+.topbar{
+  position:sticky; top:env(safe-area-inset-top,0px); z-index:20;
+  background:color-mix(in srgb,var(--ground) 88%,transparent);
+  backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--line-soft);
+}
+.topbar-in{
+  max-width:720px;margin:0 auto;padding-inline:20px;
+  display:flex;align-items:center;gap:12px;height:52px;
+}
+.brand{font-family:var(--serif);font-size:18px;letter-spacing:-.01em;font-weight:500}
+.brand em{font-style:italic;color:var(--accent)}
+.spacer{flex:1}
+.chip{
+  font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;
+  padding:3px 8px;border-radius:3px;border:1px solid var(--line);color:var(--ink-soft);
+  white-space:nowrap;
+}
+.chip.live{color:var(--accent);border-color:var(--accent);background:var(--accent-soft)}
+.timer{font-family:var(--mono);font-size:13px;font-variant-numeric:tabular-nums;color:var(--ink-soft)}
+.ghost-btn{
+  background:none;border:1px solid var(--line);border-radius:4px;
+  padding:5px 10px;font-size:13px;color:var(--ink-soft);
+}
+.ghost-btn:hover{border-color:var(--ink-faint);color:var(--ink)}
+
+/* ---------- setup ---------- */
+.eyebrow{
+  font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--ink-faint);
+}
+.lede{
+  font-family:var(--serif);font-size:26px;line-height:1.25;font-weight:400;
+  letter-spacing:-.015em;margin-top:8px;
+}
+.lede-sub{color:var(--ink-soft);margin-top:10px;max-width:56ch}
+.brief{
+  background:var(--surface);border:1px solid var(--line);border-radius:6px;
+  padding:20px;margin-top:24px;display:flex;flex-direction:column;gap:18px;
+  box-shadow:var(--shadow);
+}
+.opponent{
+  margin-top:26px;padding:18px 20px;border:1px solid var(--line);border-radius:6px;
+  background:var(--surface-2);border-left:2px solid var(--accent);
+}
+.opp-head{display:flex;gap:14px;align-items:center}
+.opp-bio{margin:14px 0 0;font-size:13.5px;color:var(--ink-soft);line-height:1.5;max-width:62ch}
+.opp-rules{
+  list-style:none;padding:0;margin:14px 0 0;
+  display:flex;flex-direction:column;gap:7px;
+}
+.opp-rules li{
+  font-family:var(--serif);font-size:15px;line-height:1.4;
+  padding-left:16px;position:relative;
+}
+.opp-rules li::before{
+  content:"";position:absolute;left:0;top:.62em;
+  width:5px;height:1px;background:var(--accent);
+}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-size:13px;font-weight:600}
+.field .hint{font-size:12.5px;color:var(--ink-faint);line-height:1.45}
+.field input[type=text],.field textarea,.field select{
+  background:var(--surface-2);border:1px solid var(--line);border-radius:4px;
+  padding:9px 11px;width:100%;resize:vertical;
+}
+.field textarea{min-height:76px;line-height:1.5}
+.field input:focus-visible,.field textarea:focus-visible,.field select:focus-visible{
+  outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent);
+}
+.seg{display:flex;gap:0;border:1px solid var(--line);border-radius:4px;overflow:hidden}
+.seg button{
+  flex:1;background:var(--surface-2);border:none;padding:9px 6px;font-size:13px;
+  color:var(--ink-soft);border-right:1px solid var(--line);
+}
+.seg button:last-child{border-right:none}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);font-weight:600}
+.seg button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.row-2{display:flex;gap:14px;flex-wrap:wrap}
+.row-2>*{flex:1 1 200px;min-width:0}
+.primary{
+  background:var(--accent);color:var(--accent-ink);border:none;border-radius:4px;
+  padding:12px 18px;font-weight:600;font-size:15px;width:100%;
+}
+.primary:disabled{opacity:.45;cursor:not-allowed}
+.primary:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.sysline{
+  display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:var(--ink-soft);
+  padding:10px 12px;background:var(--surface-2);border-radius:4px;border:1px solid var(--line-soft);
+}
+.remember{
+  display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ink-soft);
+  margin-top:2px;cursor:pointer;font-weight:400;
+}
+.remember input{accent-color:var(--accent);margin:0}
+.sysline .dot{width:7px;height:7px;border-radius:50%;background:var(--good);margin-top:6px;flex:none}
+.sysline.warn .dot{background:var(--warn)}
+.sysline.bad .dot{background:var(--bad)}
+
+/* ---------- call ---------- */
+.buyer-card{
+  background:var(--surface);border:1px solid var(--line);border-radius:6px;
+  padding:14px 16px;margin-top:20px;display:flex;gap:14px;align-items:center;
+  box-shadow:var(--shadow);
+}
+.avatar{
+  width:44px;height:44px;border-radius:50%;flex:none;
+  background:var(--accent-soft);color:var(--accent);
+  display:grid;place-items:center;font-family:var(--serif);font-size:19px;font-weight:500;
+  border:1px solid color-mix(in srgb,var(--accent) 30%,transparent);
+}
+.buyer-name{font-weight:600;font-size:15px}
+.buyer-role{font-size:12.5px;color:var(--ink-soft);margin-top:1px}
+.mood{
+  margin-left:auto;font-family:var(--mono);font-size:11px;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--ink-soft);border:1px solid var(--line);
+  padding:3px 8px;border-radius:3px;white-space:nowrap;
+}
+.transcript{display:flex;flex-direction:column;gap:20px;padding-block:24px 0}
+.turn{display:flex;flex-direction:column;gap:5px;max-width:60ch}
+.turn .who{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--ink-faint);
+}
+.turn.buyer .say{font-family:var(--serif);font-size:19px;line-height:1.45}
+.turn.me{align-self:flex-end;align-items:flex-end;text-align:right}
+.turn.me .say{
+  background:var(--surface);border:1px solid var(--line);border-radius:6px;
+  padding:9px 13px;font-size:14.5px;
+}
+.turn.note{align-self:center;text-align:center;max-width:44ch}
+.turn.note .say{font-size:12.5px;color:var(--ink-faint);font-style:italic}
+.thinking .say{color:var(--ink-faint)}
+.caret{display:inline-block;width:2px;height:1em;background:var(--accent);
+  vertical-align:-2px;animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+
+.dock{
+  position:sticky;bottom:0;z-index:15;margin-top:28px;
+  background:linear-gradient(to top,var(--ground) 62%,transparent);
+  padding-top:22px;
+  padding-bottom:calc(16px + env(safe-area-inset-bottom,0px));
+}
+.dock-in{display:flex;flex-direction:column;gap:10px}
+.ptt{
+  width:100%;border:1px solid var(--accent);background:var(--surface);color:var(--accent);
+  border-radius:6px;padding:16px;font-weight:600;font-size:15px;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  touch-action:none;user-select:none;-webkit-user-select:none;
+  transition:background .12s ease,color .12s ease,transform .08s ease;
+}
+.ptt[data-on="1"]{background:var(--accent);color:var(--accent-ink);transform:scale(.995)}
+.ptt:disabled{opacity:.4;cursor:not-allowed}
+.ptt:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.mic-ring{width:9px;height:9px;border-radius:50%;background:currentColor;flex:none}
+.ptt[data-on="1"] .mic-ring{animation:pulse .9s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(1.45)}}
+.heard{
+  color:var(--ink-soft);min-height:1.4em;text-align:center;
+  font-family:var(--serif);font-size:15px;
+}
+.dock-row{display:flex;gap:10px;align-items:center}
+.dock-row input[type=text]{
+  flex:1;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:12px 13px;
+}
+.dock-row input:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.send-btn{background:var(--accent);color:var(--accent-ink);border:none;border-radius:6px;padding:12px 16px;font-weight:600}
+.dock-meta{display:flex;gap:12px;align-items:center;justify-content:space-between;font-size:12px;color:var(--ink-faint)}
+.link-btn{background:none;border:none;padding:0;color:var(--ink-soft);text-decoration:underline;text-underline-offset:2px;font-size:12px}
+.link-btn:hover{color:var(--accent)}
+
+/* ---------- review ---------- */
+.verdict{
+  border:1px solid var(--line);border-radius:6px;background:var(--surface);
+  padding:22px;margin-top:22px;box-shadow:var(--shadow);
+}
+.verdict-top{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.outcome{
+  font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;
+  padding:4px 9px;border-radius:3px;
+}
+.outcome.won{background:var(--good-soft);color:var(--good)}
+.outcome.stalled{background:var(--warn-soft);color:var(--warn)}
+.outcome.lost{background:var(--bad-soft);color:var(--bad)}
+.headline{font-family:var(--serif);font-size:23px;line-height:1.3;margin-top:12px}
+.total{font-family:var(--mono);font-size:13px;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+
+.reveal{
+  margin-top:18px;border:1px solid var(--accent);border-radius:6px;
+  background:var(--accent-soft);padding:16px 18px;
+}
+.reveal .eyebrow{color:var(--accent)}
+.reveal p{margin:8px 0 0;font-family:var(--serif);font-size:18px;line-height:1.45}
+.reveal .found{
+  margin-top:12px;font-size:13px;display:flex;gap:8px;align-items:center;
+  font-weight:600;
+}
+
+.meters{display:flex;flex-direction:column;gap:14px;margin-top:20px}
+.meter-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.meter-name{font-size:13.5px;font-weight:600}
+.meter-val{font-family:var(--mono);font-size:12.5px;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.bar{height:5px;background:var(--surface-2);border-radius:3px;overflow:hidden;margin-top:6px;border:1px solid var(--line-soft)}
+.bar span{display:block;height:100%;border-radius:3px;background:var(--accent)}
+.bar span.good{background:var(--good)}
+.bar span.warn{background:var(--warn)}
+.bar span.bad{background:var(--bad)}
+.meter-why{font-size:12.5px;color:var(--ink-soft);margin-top:5px;line-height:1.45}
+
+.sec-title{
+  font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--ink-faint);margin-top:32px;padding-bottom:8px;border-bottom:1px solid var(--line-soft);
+}
+.moment{
+  border-left:2px solid var(--line);padding:14px 0 14px 16px;
+}
+.moment.good{border-left-color:var(--good)}
+.moment.miss{border-left-color:var(--warn)}
+.moment.critical{border-left-color:var(--bad)}
+.moment .tag{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);
+}
+.moment.good .tag{color:var(--good)}
+.moment.miss .tag{color:var(--warn)}
+.moment.critical .tag{color:var(--bad)}
+.moment .quote{font-family:var(--serif);font-size:17px;line-height:1.4;margin-top:6px}
+.moment .why{font-size:13.5px;color:var(--ink-soft);margin-top:8px}
+.moment .better{
+  font-size:13.5px;margin-top:10px;background:var(--surface);border:1px solid var(--line-soft);
+  border-radius:4px;padding:10px 12px;
+}
+.moment .better b{
+  display:block;font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--ink-faint);font-weight:500;margin-bottom:4px;
+}
+.fixes{list-style:none;padding:0;margin:14px 0 0;counter-reset:fx;display:flex;flex-direction:column;gap:14px}
+.fixes li{display:flex;gap:12px;align-items:flex-start;counter-increment:fx}
+.fixes li::before{
+  content:counter(fx);font-family:var(--mono);font-size:11px;color:var(--accent);
+  border:1px solid var(--accent);border-radius:50%;width:22px;height:22px;flex:none;
+  display:grid;place-items:center;margin-top:2px;
+}
+.drill{
+  margin-top:26px;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:16px 18px;
+}
+.drill p{margin:6px 0 0;font-size:14px;color:var(--ink-soft)}
+.endbar{display:flex;gap:10px;flex-wrap:wrap;margin-top:26px;padding-bottom:40px}
+.endbar button{flex:1 1 180px}
+.secondary{background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:12px 18px;font-weight:500}
+.secondary:hover{border-color:var(--ink-faint)}
+
+.err{
+  border:1px solid var(--bad);background:var(--bad-soft);color:var(--bad);
+  border-radius:4px;padding:11px 13px;font-size:13px;margin-top:14px;
+}
+.loading{display:flex;gap:10px;align-items:center;color:var(--ink-soft);font-size:14px;padding-block:36px}
+.spin{width:14px;height:14px;border:2px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:sp .7s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
+@media (max-width:480px){
+  .lede{font-size:22px}
+  .turn.buyer .say{font-size:17px}
+  .headline{font-size:20px}
+}
+</style>
+
+<div class="topbar">
+  <div class="topbar-in">
+    <div class="brand">Objection <em>Room</em></div>
+    <div class="spacer"></div>
+    <span class="timer" id="timer" hidden>00:00</span>
+    <span class="chip" id="statusChip">ready</span>
+    <button class="ghost-btn" id="muteBtn" hidden>Mute</button>
+  </div>
+</div>
+
+<!-- ============ SETUP ============ -->
+<section class="wrap" id="viewSetup">
+  <div style="padding-top:34px">
+    <div class="eyebrow">Live objection drill</div>
+    <h1 class="lede">Sell to a man who has heard it all and owes you nothing.</h1>
+    <p class="lede-sub">Vic Halloran takes four pitches a week and buys about three things a year. He interrupts, he wants numbers, and he is hiding one real reason he won't sign — never the one he says first. Find it and you can close him. Miss it and you'll get a flat no.</p>
+  </div>
+
+  <div class="opponent">
+    <div class="opp-head">
+      <div class="avatar">V</div>
+      <div>
+        <div class="buyer-name">Vic Halloran</div>
+        <div class="buyer-role">Managing Partner · Halloran Holdings</div>
+      </div>
+    </div>
+    <p class="opp-bio">Bought his first business at 26 with borrowed money. Owns eleven now — laundromats, an HVAC outfit, two dental groups, a freight brokerage. He made his money operating, not theorising, and has no patience for anyone who did the reverse.</p>
+    <ul class="opp-rules">
+      <li>An adjective is an evasion until a number backs it.</li>
+      <li>He will lowball you once on purpose. It's a test, not an offer.</li>
+      <li>Hold your price and you gain ground. Fold and you've told him what it's really worth.</li>
+      <li>He can hear a script by the second sentence, and he'll say so.</li>
+    </ul>
+  </div>
+
+  <div class="brief">
+    <div class="field">
+      <label for="product">What are you selling?</label>
+      <div class="hint">A couple of sentences. What it is, who it's for, and roughly what it costs — include the price, because price objections are where most calls die.</div>
+      <textarea id="product" placeholder="e.g. A scheduling tool for independent physiotherapy clinics. Replaces phone bookings with online self-scheduling and automated reminders. £89/month per clinic, no setup fee."></textarea>
+    </div>
+
+    <div class="field">
+      <label for="icp">Who's your usual buyer?</label>
+      <div class="hint">The job title and company type you normally sell to. Vic will take that seat for whichever of his businesses fits — so the more specific you are, the sharper the objections get.</div>
+      <input type="text" id="icp" placeholder="e.g. Practice owner at a 3-therapist clinic">
+    </div>
+
+    <div class="row-2">
+      <div class="field">
+        <label>What mood is he in?</label>
+        <div class="seg" id="segDiff" role="group" aria-label="Vic's mood">
+          <button type="button" data-v="warm" aria-pressed="false">Patient</button>
+          <button type="button" data-v="skeptical" aria-pressed="true">Impatient</button>
+          <button type="button" data-v="hostile" aria-pressed="false">Brutal</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Call length</label>
+        <div class="seg" id="segLen" role="group" aria-label="Call length">
+          <button type="button" data-v="6" aria-pressed="false">Short</button>
+          <button type="button" data-v="12" aria-pressed="true">Standard</button>
+          <button type="button" data-v="20" aria-pressed="false">Long</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="field" id="codeField" hidden>
+      <label for="accessCode">Access code</label>
+      <div class="hint">This drill runs on a shared Claude account, so it's gated. Ask whoever sent you the link for the code.</div>
+      <input type="password" id="accessCode" placeholder="Access code" autocomplete="off" spellcheck="false">
+      <label class="remember"><input type="checkbox" id="rememberCode" checked> <span>Remember it on this device</span></label>
+    </div>
+
+    <div class="field" id="keyField" hidden>
+      <label for="apiKey">Anthropic API key</label>
+      <div class="hint">You're running this file locally, so it needs your own key to reach Claude. It stays in this browser and goes only to api.anthropic.com. Opened as a published Claude artifact, no key is needed at all.</div>
+      <input type="password" id="apiKey" placeholder="sk-ant-..." autocomplete="off" spellcheck="false">
+      <label class="remember"><input type="checkbox" id="rememberKey"> <span>Remember the key on this device</span></label>
+    </div>
+
+    <div class="sysline" id="micLine"><span class="dot"></span><span id="micText">Checking microphone…</span></div>
+
+    <button class="primary" id="startBtn" disabled>Start the call</button>
+  </div>
+  <div id="setupErr"></div>
+  <div style="height:48px"></div>
+</section>
+
+<!-- ============ CALL ============ -->
+<section class="wrap" id="viewCall" hidden>
+  <div class="buyer-card">
+    <div class="avatar" id="avatar">—</div>
+    <div style="min-width:0">
+      <div class="buyer-name" id="buyerName">—</div>
+      <div class="buyer-role" id="buyerRole">—</div>
+    </div>
+    <div class="mood" id="moodChip">connecting</div>
+  </div>
+
+  <div class="transcript" id="transcript"></div>
+
+  <div class="dock">
+    <div class="dock-in">
+      <div class="heard" id="heard"></div>
+      <button class="ptt" id="pttBtn" hidden><span class="mic-ring"></span><span id="pttLabel">Hold to talk</span></button>
+      <div class="dock-row" id="textRow" hidden>
+        <input type="text" id="textIn" placeholder="Type what you'd say…" autocomplete="off">
+        <button class="send-btn" id="sendBtn">Send</button>
+      </div>
+      <div class="dock-meta">
+        <button class="link-btn" id="switchInput">Type instead</button>
+        <span id="turnCount"></span>
+        <button class="link-btn" id="endBtn">End call &amp; get review</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ REVIEW ============ -->
+<section class="wrap" id="viewReview" hidden>
+  <div id="reviewBody"></div>
+</section>
+
+<script>
+"use strict";
+
+/* ========================================================================
+   STATE
+   ===================================================================== */
+const S = {
+  cfg:{ product:"", icp:"", difficulty:"skeptical", maxTurns:12 },
+  persona:null,
+  turns:[],            // what we send the model
+  log:[],              // {who, text, state} for the review
+  state:{interest:30,trust:30,urgency:25,mood:"guarded"},
+  started:0, timerId:null, buyerTurns:0,
+  ended:false, busy:false,
+  inputMode:"voice",
+  muted:false
+};
+
+/* Applied only when the page runs as a local file with nothing saved yet.
+   Anyone opening the published artifact starts from a blank brief. */
+const LOCAL_SEED = {
+  product:"24h and 48h hackathons. For big companies with challenges they don't solve because they don't have time, or because solving them in-house would take a lot of financial resources. Our price per hackathon is 15k euros.",
+  icp:"Innovation or operations lead at a large company",
+  difficulty:"skeptical",
+  maxTurns:12
+};
+
+let briefRestored = false;
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+/* ========================================================================
+   BRAIN — claude.use("sample") when published, direct API when local
+   ===================================================================== */
+let sampleFn = null;
+let brainReady = false;
+
+/* Three ways this page can reach Claude, in order of preference:
+   1. published as a Claude artifact  -> claude.use("sample"), viewer's account
+   2. served over http/https (Vercel) -> /api/claude proxy, holds the key server-side
+   3. opened as a local file          -> the viewer's own key, pasted into the brief   */
+const ON_WEB = location.protocol === "http:" || location.protocol === "https:";
+let useProxy = false;
+
+async function initBrain(){
+  try{
+    if(window.claude && typeof window.claude.use === "function"){
+      sampleFn = await window.claude.use("sample");
+    }
+  }catch(e){ sampleFn = null; }
+  brainReady = true;
+  useProxy = !sampleFn && ON_WEB;
+  $("keyField").hidden = !!sampleFn || useProxy;
+  $("codeField").hidden = !useProxy;
+  // Local copy with an empty brief: pre-fill it. The shared artifact stays blank.
+  if(!sampleFn && !ON_WEB && !briefRestored){
+    applyBrief(LOCAL_SEED);
+    saveBrief();
+  }
+  $("startBtn").disabled = false;
+  $("startBtn").textContent = "Start the call";
+}
+
+const MODEL_FOR = { quick:"claude-haiku-4-5-20251001", default:"claude-sonnet-5", complex:"claude-sonnet-5" };
+
+const S_STR = d => ({type:"string", description:d});
+
+const SCENARIO_SCHEMA = {
+  type:"object",
+  properties:{
+    companyDetail: S_STR("Which of Vic's businesses this is for, plus one clause about it."),
+    situation:     S_STR("Two sentences on what is going on in that business right now."),
+    hiddenReason:  S_STR("The real blocker, in Vic's own first-person words."),
+    tell:          S_STR("What he says or does that hints at it without stating it."),
+    openingObjection:{type:"string", enum:["price","timing","authority","need","trust","competitor"]},
+    opening:       S_STR("His first spoken line, 1-2 sentences, in character.")
+  },
+  required:["companyDetail","situation","hiddenReason","tell","openingObjection","opening"]
+};
+
+const DIM_SCHEMA = {
+  type:"object",
+  properties:{ score:{type:"integer", minimum:0, maximum:10}, why: S_STR("One specific sentence.") },
+  required:["score","why"]
+};
+
+const REVIEW_SCHEMA = {
+  type:"object",
+  properties:{
+    outcome:{type:"string", enum:["won","stalled","lost"]},
+    headline: S_STR("One sharp sentence naming what decided this call."),
+    foundHidden:{type:"boolean"},
+    hiddenComment: S_STR("Did they get near the real reason, and what would have surfaced it."),
+    scores:{
+      type:"object",
+      properties:{
+        discovery:DIM_SCHEMA, objections:DIM_SCHEMA, discipline:DIM_SCHEMA,
+        specificity:DIM_SCHEMA, control:DIM_SCHEMA
+      },
+      required:["discovery","objections","discipline","specificity","control"]
+    },
+    moments:{
+      type:"array",
+      items:{
+        type:"object",
+        properties:{
+          quote: S_STR("The seller's exact words, trimmed to the key clause."),
+          verdict:{type:"string", enum:["good","miss","critical"]},
+          why:   S_STR("What this did to Vic."),
+          better:S_STR("A specific line they could have said instead. Empty string when verdict is good.")
+        },
+        required:["quote","verdict","why","better"]
+      }
+    },
+    fixes:{type:"array", items:{type:"string"}},
+    drill: S_STR("The exact scenario they should run next, and why.")
+  },
+  required:["outcome","headline","foundHidden","hiddenComment","scores","moments","fixes","drill"]
+};
+
+const asTurns = input => typeof input === "string" ? [{role:"user",content:input}] : input;
+
+function looseJSON(text){
+  if(!text) throw new Error("empty reply");
+  let t = String(text).trim();
+  const fence = t.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  if(fence) t = fence[1].trim();
+  try{ return JSON.parse(t); }catch(e){}
+  const a = t.indexOf("{"), b = t.lastIndexOf("}");
+  const c = t.indexOf("["), d = t.lastIndexOf("]");
+  const cand = (a>=0 && b>a) ? t.slice(a,b+1) : (c>=0 && d>c ? t.slice(c,d+1) : null);
+  if(cand) return JSON.parse(cand);
+  throw new Error("The model replied without any JSON. It said: " + t.slice(0,180));
+}
+
+async function directCall(input, {tier="default", maxTokens=900, onText, schema}={}){
+  let url, headers;
+  if(useProxy){
+    const code = ($("accessCode").value||"").trim();
+    if(!code) throw new Error("Enter the access code to start a call.");
+    url = "/api/claude";
+    headers = { "content-type":"application/json", "x-access-code":code };
+  }else{
+    const key = ($("apiKey").value||"").trim();
+    if(!key) throw new Error("No API key. Paste an Anthropic key into the call brief, or open this page as a published Claude artifact to skip keys entirely.");
+    url = "https://api.anthropic.com/v1/messages";
+    headers = {
+      "content-type":"application/json",
+      "x-api-key":key,
+      "anthropic-version":"2023-06-01",
+      "anthropic-dangerous-direct-browser-access":"true"
+    };
+  }
+  const body = {
+    model: MODEL_FOR[tier] || MODEL_FOR.default,
+    max_tokens: maxTokens,
+    messages: asTurns(input)
+  };
+  // Forced tool use is how we guarantee structure: the model must answer by
+  // calling this tool, so the reply arrives already parsed and shaped.
+  if(schema){
+    body.tools = [{
+      name:"reply",
+      description:"Return the structured answer. This is the only way to reply.",
+      input_schema: schema
+    }];
+    body.tool_choice = { type:"tool", name:"reply" };
+  }
+  const res = await fetch(url, { method:"POST", headers, body:JSON.stringify(body) });
+  if(!res.ok){
+    let detail = "";
+    try{ detail = (await res.json()).error?.message || ""; }catch(e){}
+    if(res.status === 401 && useProxy) throw new Error("That access code isn't right. Check it and try again.");
+    if(res.status === 429) throw new Error("Too many calls right now. Give it a minute and start again.");
+    throw new Error("Claude API error " + res.status + (detail ? ": " + detail : ""));
+  }
+  const data = await res.json();
+
+  if(schema){
+    const call = (data.content||[]).find(b => b.type === "tool_use");
+    if(!call || !call.input){
+      if(data.stop_reason === "max_tokens"){
+        throw new Error("The reply was cut off before it finished. Try a shorter product description, or a shorter call.");
+      }
+      throw new Error("The model didn't return a structured answer. Try starting the call again.");
+    }
+    return call.input;
+  }
+
+  const text = (data.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("");
+  if(onText && text) onText({text, delta:text});
+  return text;
+}
+
+/** One door to Claude, whichever runtime we are in. */
+async function ask(input, opts={}){
+  const {tier="default", onText, json=false, maxTokens=900, schema} = opts;
+  if(sampleFn){
+    if(json) return await sampleFn.json(input, {modelTier:tier, cache:false, onText});
+    const r = await sampleFn(input, {modelTier:tier, cache:false, onText});
+    return r.text;
+  }
+  const out = await directCall(input, {tier, maxTokens, onText, schema: json ? schema : undefined});
+  // With a schema the reply is already an object; without one, dig the JSON out of the text.
+  if(json && !schema) return looseJSON(out);
+  return out;
+}
+
+function humanError(e){
+  const code = e && e.code;
+  if(code === "not_granted" || code === "sampling_disabled")
+    return "This page needs permission to use Claude on your account. Reload and allow it when asked.";
+  if(code === "rate_limited") return "Claude is rate-limited right now. Wait a minute, then start a new call.";
+  if(code === "session_expired") return "Your Claude session expired. Sign in again and reload.";
+  if(code === "invalid_json") return "The buyer's reply came back malformed. Try that line again.";
+  if(code === "refused") return "Claude declined that input. Rephrase and try again.";
+  return (e && e.message) ? e.message : "Something went wrong reaching Claude.";
+}
+
+/* ========================================================================
+   SPEECH OUT
+   ===================================================================== */
+let voices = [];
+function loadVoices(){ try{ voices = window.speechSynthesis ? speechSynthesis.getVoices() : []; }catch(e){ voices = []; } }
+if(window.speechSynthesis){
+  loadVoices();
+  speechSynthesis.onvoiceschanged = loadVoices;
+}
+
+function pickVoice(seed){
+  if(!voices.length) return null;
+  const en = voices.filter(v => /^en[-_]/i.test(v.lang));
+  const pool = en.length ? en : voices;
+  const natural = pool.filter(v => /natural|neural|google|premium|enhanced/i.test(v.name));
+  const use = natural.length ? natural : pool;
+  let h = 0;
+  for(const ch of String(seed||"x")) h = (h*31 + ch.charCodeAt(0)) >>> 0;
+  return use[h % use.length];
+}
+
+function speak(text){
+  return new Promise(resolve => {
+    if(S.muted || !window.speechSynthesis || !text) return resolve();
+    let done = false;
+    const fin = () => { if(!done){ done = true; resolve(); } };
+    try{
+      speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      const v = pickVoice(S.persona && S.persona.name);
+      if(v){ u.voice = v; u.lang = v.lang; }
+      u.rate = 1.03; u.pitch = 1;
+      u.onend = fin; u.onerror = fin;
+      speechSynthesis.speak(u);
+      // safety net: some engines never fire onend
+      setTimeout(fin, Math.min(22000, 1800 + text.length * 95));
+    }catch(e){ fin(); }
+  });
+}
+
+/* ========================================================================
+   SPEECH IN — push to talk
+   ===================================================================== */
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+let rec = null, recOn = false, heardFinal = "", heardInterim = "", recStopHandler = null;
+
+function buildRec(){
+  if(!SR) return null;
+  const r = new SR();
+  r.continuous = true;
+  r.interimResults = true;
+  r.lang = "en-US";
+  r.onresult = ev => {
+    let fin = "", int = "";
+    for(let i = ev.resultIndex; i < ev.results.length; i++){
+      const t = ev.results[i][0].transcript;
+      if(ev.results[i].isFinal) fin += t; else int += t;
+    }
+    if(fin) heardFinal += fin;
+    heardInterim = int;
+    $("heard").textContent = (heardFinal + " " + heardInterim).trim() || "…";
+  };
+  r.onerror = ev => {
+    recOn = false;
+    setPTT(false);
+    if(ev.error === "not-allowed" || ev.error === "service-not-allowed"){
+      failToText("The microphone was blocked, so we've switched to typing. Allow mic access for this page and reload to use voice.");
+    }else if(ev.error === "no-speech"){
+      $("heard").textContent = "Didn't catch that — hold the button and speak.";
+    }
+  };
+  r.onend = () => {
+    recOn = false;
+    setPTT(false);
+    const h = recStopHandler; recStopHandler = null;
+    if(h) h((heardFinal + " " + heardInterim).trim());
+  };
+  return r;
+}
+
+function setPTT(on){
+  const b = $("pttBtn");
+  b.dataset.on = on ? "1" : "0";
+  $("pttLabel").textContent = on ? "Listening — release to send" : "Hold to talk";
+}
+
+function startListening(){
+  if(recOn || S.busy || S.ended) return;
+  try{ speechSynthesis && speechSynthesis.cancel(); }catch(e){}
+  heardFinal = ""; heardInterim = "";
+  $("heard").textContent = "…";
+  if(!rec) rec = buildRec();
+  if(!rec) return failToText("Speech recognition isn't available in this browser, so we've switched to typing.");
+  try{ rec.start(); recOn = true; setPTT(true); }
+  catch(e){ /* already running */ }
+}
+
+function stopListening(){
+  if(!recOn) return;
+  recStopHandler = text => {
+    $("heard").textContent = "";
+    const t = (text||"").trim();
+    if(t.length < 2){ $("heard").textContent = "Didn't catch that — hold and speak again."; return; }
+    sendSellerLine(t);
+  };
+  try{ rec.stop(); }catch(e){ recOn = false; setPTT(false); }
+}
+
+function failToText(msg){
+  S.inputMode = "text";
+  $("pttBtn").hidden = true;
+  $("textRow").hidden = false;
+  $("switchInput").textContent = "Use voice";
+  if(msg) addNote(msg);
+  $("textIn").focus();
+}
+
+async function checkMic(){
+  const line = $("micLine"), txt = $("micText");
+  if(!SR){
+    line.className = "sysline warn";
+    txt.textContent = "This browser has no speech recognition, so the call will run in typing mode. For voice, open it in Chrome or Edge.";
+    S.inputMode = "text";
+    return;
+  }
+  let perm = null;
+  try{ perm = await navigator.permissions.query({name:"microphone"}); }catch(e){}
+  if(perm && perm.state === "denied"){
+    line.className = "sysline bad";
+    txt.textContent = "The microphone is blocked for this page. Allow it in your browser's site settings, or run the call in typing mode.";
+    S.inputMode = "text";
+    return;
+  }
+  line.className = "sysline";
+  txt.textContent = (perm && perm.state === "granted")
+    ? "Microphone ready. Hold the bar at the bottom of the call — or hold the spacebar — to speak."
+    : "Voice ready. Your browser will ask for the microphone the first time you hold to talk.";
+}
+
+/* ========================================================================
+   PROMPTS
+   ===================================================================== */
+/* The house adversary. Fictional — the attitude is the archetype, not any real person. */
+const CHARACTER = {
+  name:"Vic Halloran",
+  role:"Managing Partner",
+  firm:"Halloran Holdings",
+  bio:"Bought his first business at 26 with borrowed money. Owns eleven now — laundromats, an HVAC outfit, two dental groups, a freight brokerage. Sits through four pitches a week and buys maybe three things a year.",
+  creed:[
+"- You made your money operating, not theorising, and you have no patience for anyone who has done the reverse.",
+"- Numbers are the only language you fully trust. An adjective is an evasion until a number backs it.",
+"- You interrupt. If a sentence is going nowhere you cut it off and ask the question underneath it.",
+"- You can hear a script from the second sentence, and you say so: 'You're reading. Talk to me.'",
+"- Silence is a tool. Sometimes you just say nothing and let them fill it — and you judge what they fill it with.",
+"- You respect nerve far more than politeness. Someone who holds their price and tells you no earns real ground with you; someone who folds the second you push has told you their product is worth less than they claimed.",
+"- You lowball on purpose, at least once, to see what happens. 'I'd pay a third of that.' It is a test, not an offer.",
+"- You ask for the one-sentence version and mean it: 'Say that again. Shorter.'",
+"- You never insult the person, only the reasoning. You are hard, not cruel, and you can be won.",
+"- When someone genuinely impresses you, you say so plainly and briefly, once. You do not gush."
+  ]
+};
+
+const DIFFICULTY = {
+  warm: {
+    label:"patient",
+    brief:"Today Vic has time and the business in question genuinely has the problem. He still makes them work, but he lets sentences finish and gives credit where it is due. Open with a tier-1 brush-off and escalate slowly.",
+    start:{interest:45, trust:40, urgency:40}
+  },
+  skeptical: {
+    label:"impatient",
+    brief:"Standard Vic. Four pitches this week, three of them wasted his time. Polite but unconvinced, volunteers nothing, interrupts when the seller rambles. Open with a tier-2 objection.",
+    start:{interest:30, trust:28, urgency:25}
+  },
+  hostile: {
+    label:"brutal",
+    brief:"Bad quarter, and he did not ask for this call. He interrupts early and often, challenges every number, and will name the technique out loud if he recognises one. Open with a tier-3 objection and tell them flatly when something sounds generic.",
+    start:{interest:18, trust:15, urgency:15}
+  }
+};
+
+function personaPrompt(){
+  const d = DIFFICULTY[S.cfg.difficulty];
+  return [
+"You are setting up one round of a sales-training simulator. The buyer is always the same man — Vic Halloran — so do NOT invent a person. Invent the DEAL he is evaluating today.",
+"",
+"WHO VIC IS:",
+CHARACTER.name + ", " + CHARACTER.role + " of " + CHARACTER.firm + ". " + CHARACTER.bio,
+"His mood today: " + d.label + " — " + d.brief,
+"",
+"WHAT THE SELLER SELLS:",
+S.cfg.product,
+"",
+"THE SELLER THINKS THEY ARE PITCHING: " + S.cfg.icp,
+"Vic is the man who would actually sign. Pick which of his businesses this would go into, and make it a business where that seller's description plausibly lands.",
+"",
+"The most important field is hiddenReason: the actual thing standing between Vic and a yes today. It must NOT be the objection he opens with. Good hidden reasons are specific and a little costly to admit — a system he already paid for and cannot get his people to use, a manager who will quit if this lands on them, a number he does not actually know about his own operation, a vendor who burned him on exactly this two years ago, a partner who has to agree and won't. Bad hidden reasons are generic, like 'he needs more budget'.",
+"",
+"The opening line must sound like Vic: short, direct, faintly impatient, no pleasantries beyond the minimum.",
+"",
+"Reply with only a JSON object, no other text, exactly these keys:",
+'{"companyDetail":"which of his businesses this is for and one clause about it — size, location, what it does","situation":"two sentences on what is going on in that business right now","hiddenReason":"the real blocker, in Vic\'s own first-person words, one or two sentences","tell":"the thing he says or does that hints at it without stating it","openingObjection":"one of: price, timing, authority, need, trust, competitor","opening":"his first spoken line, 1-2 sentences, as if he just picked up the phone"}'
+].join("\n");
+}
+
+function buyerRules(){
+  const p = S.persona, d = DIFFICULTY[S.cfg.difficulty];
+  return [
+"You are role-playing a buyer on a live sales call so a salesperson can practise. Stay in character for the whole call. This is a training exercise the seller asked for: play the buyer honestly and make them work for it.",
+"",
+"=== WHAT THEY ARE SELLING YOU ===",
+S.cfg.product,
+"",
+"=== WHO YOU ARE ===",
+"Name: " + CHARACTER.name,
+"Role: " + CHARACTER.role + " of " + CHARACTER.firm,
+"Background: " + CHARACTER.bio,
+"This deal would be for: " + p.companyDetail,
+"What is going on there: " + p.situation,
+"Your mood today: " + d.label + " — " + d.brief,
+"",
+"=== HOW VIC BEHAVES — this is your character, hold it every turn ===",
+CHARACTER.creed.join("\n"),
+"",
+"=== YOUR HIDDEN TRUTH ===",
+'The real reason you have not already bought something like this: "' + p.hiddenReason + '"',
+"You will NOT state this outright. You hide it behind surface objections about price, timing, authority, need, trust or a competitor.",
+"You reveal it ONLY if the seller earns it: a genuine, specific question about your situation; naming a consequence you actually feel; or showing they understand your world well enough that hiding it would feel silly. If they earn it, say it, and raise trust sharply.",
+"If they only pitch, present, or ask lazy questions like 'what are your biggest challenges?', keep it hidden and stay on the surface objection.",
+"Your tell, which you may drop naturally: " + p.tell,
+"",
+"=== HOW TO PLAY THE CALL ===",
+"- You are SPEAKING on a phone. One to three sentences, 45 words maximum. Never monologue. No bullet points, no headings, no stage directions.",
+"- Never coach, never praise their technique, never break character, never mention that this is practice, never say you are an AI.",
+"- Real objections escalate. If they answer yours badly, come back harder on the same one instead of politely moving on.",
+"- If they drop the price or offer a discount before you asked for one, you lose respect: trust down 10 to 20, and note that they folded.",
+"- If they make a vague claim like 'saves you time' or 'best in class', demand a specific number or example.",
+"- If they ask a sharp, specific discovery question, answer it — but make them dig for the second layer.",
+"- If they acknowledge your objection, isolate it, reframe it with concrete proof and confirm, reward that: trust and interest up.",
+"- If they pitch for more than two turns without asking you anything, get impatient: interest down.",
+"- If trust falls below 18, go clipped and start looking for the exit. Below 10, end the call.",
+"- Agree to a next step only when interest is at least 65 AND trust at least 60 AND urgency at least 50. Then set end to \"won\".",
+"- Do not close just because they asked nicely, and do not be moved by enthusiasm alone. Specifics move you; adjectives do not.",
+"- Move each meter by at most 15 in one turn unless something genuinely dramatic happened.",
+"",
+"=== OUTPUT FORMAT ===",
+"Reply with exactly two parts and nothing else:",
+"1. The words you say out loud. Plain text, no quote marks, no name prefix.",
+"2. On a new line, the delimiter ||| followed by a single-line JSON object:",
+'||| {"interest":0-100,"trust":0-100,"urgency":0-100,"mood":"one lowercase word someone could read off your voice, such as guarded, thawing, impatient, curious, dismissive or engaged","objection":"price|timing|authority|need|trust|competitor|none","tier":1-3,"revealedHidden":true|false,"note":"one short clause on why the meters moved","end":null|"won"|"lost"|"ghosted"}',
+"",
+"Your meters right now — interest " + S.state.interest + ", trust " + S.state.trust + ", urgency " + S.state.urgency + ". Continue from these."
+].join("\n");
+}
+
+function reviewPrompt(){
+  const script = S.log.map(e => {
+    if(e.who === "buyer"){
+      const st = e.state;
+      const meta = st ? "   [meters: interest " + st.interest + ", trust " + st.trust + ", urgency " + st.urgency + (st.note ? " — " + st.note : "") + "]" : "";
+      return "BUYER: " + e.text + meta;
+    }
+    return "SELLER: " + e.text;
+  }).join("\n");
+
+  return [
+"You are a demanding but fair sales coach reviewing a practice call. You have the full transcript plus the buyer's hidden internal state, which the seller could not see. Be specific and concrete, quote their actual words, and never give advice that would fit any call.",
+"",
+"WHAT THEY WERE SELLING: " + S.cfg.product,
+"WHO THEY PITCHED: " + CHARACTER.name + ", " + CHARACTER.role + " of " + CHARACTER.firm + " — a hard, numbers-first operator who interrupts, tests with lowballs, and respects held ground far more than politeness.",
+"THE DEAL WAS FOR: " + (S.persona.companyDetail || "one of his businesses"),
+"HIS MOOD: " + DIFFICULTY[S.cfg.difficulty].label,
+'THE BUYER\'S HIDDEN REASON, which the seller could not see: "' + S.persona.hiddenReason + '"',
+"FINAL METERS: interest " + S.state.interest + ", trust " + S.state.trust + ", urgency " + S.state.urgency,
+"",
+"=== TRANSCRIPT ===",
+script,
+"=== END TRANSCRIPT ===",
+"",
+"Score these five dimensions out of 10. Be strict: 5 is competent, 8 is genuinely good, 10 is rare.",
+"1. discovery — did they ask before they pitched, and were the questions specific enough to surface anything real?",
+"2. objections — did they acknowledge, isolate, reframe with proof and confirm? Or did they argue, ignore, or roll over?",
+"3. discipline — did they hold their price and their frame? Discounting unprompted, over-apologising and filling silence all cost points. If Vic lowballed and the seller moved on price without getting anything back, that is a critical failure, not a minor one: the lowball was a test and they failed it. If they held the number and said no to him plainly, score it high and say so.",
+"4. specificity — concrete numbers, named examples and proof, versus adjectives and claims.",
+"5. control — did they steer the call and land a real next step, or did it drift and fizzle?",
+"",
+"For moments, pick three to five real turning points, in order. Quote the seller's words verbatim, trimmed to the key clause. verdict is good, miss or critical — critical is for a moment that cost them the deal. When verdict is miss or critical, 'better' must be a specific line they could actually have said, not the name of a technique.",
+"",
+"Reply with only a JSON object, no other text:",
+'{"outcome":"won|stalled|lost","headline":"one sharp sentence naming what decided this call","foundHidden":true|false,"hiddenComment":"one or two sentences: did they get near the real reason, and what would have surfaced it","scores":{"discovery":{"score":0,"why":"one specific sentence"},"objections":{"score":0,"why":"one specific sentence"},"discipline":{"score":0,"why":"one specific sentence"},"specificity":{"score":0,"why":"one specific sentence"},"control":{"score":0,"why":"one specific sentence"}},"moments":[{"quote":"their exact words","verdict":"good|miss|critical","why":"what this did to the buyer","better":"a specific line they could have said instead, or an empty string when verdict is good"}],"fixes":["three or four specific things to do differently, each imperative and concrete"],"drill":"one sentence naming the exact scenario they should run next, and why"}'
+].join("\n");
+}
+
+/* ========================================================================
+   TRANSCRIPT
+   ===================================================================== */
+function addTurn(who, text){
+  const d = document.createElement("div");
+  d.className = "turn " + who;
+  const who_ = document.createElement("div");
+  who_.className = "who";
+  who_.textContent = who === "buyer" ? (S.persona ? S.persona.name : "Buyer") : "You";
+  const say = document.createElement("div");
+  say.className = "say";
+  say.textContent = text;
+  d.append(who_, say);
+  $("transcript").appendChild(d);
+  d.scrollIntoView({behavior:"smooth", block:"end"});
+  return d;
+}
+
+function addNote(text){
+  const d = document.createElement("div");
+  d.className = "turn note";
+  const say = document.createElement("div");
+  say.className = "say";
+  say.textContent = text;
+  d.appendChild(say);
+  $("transcript").appendChild(d);
+  d.scrollIntoView({behavior:"smooth", block:"end"});
+  return d;
+}
+
+function addPending(){
+  const d = document.createElement("div");
+  d.className = "turn buyer thinking";
+  const who_ = document.createElement("div");
+  who_.className = "who";
+  who_.textContent = S.persona ? S.persona.name : "Buyer";
+  const say = document.createElement("div");
+  say.className = "say";
+  say.innerHTML = '<span class="caret"></span>';
+  d.append(who_, say);
+  $("transcript").appendChild(d);
+  d.scrollIntoView({behavior:"smooth", block:"end"});
+  return d;
+}
+
+/* ========================================================================
+   CALL FLOW
+   ===================================================================== */
+function splitReply(raw){
+  const i = raw.indexOf("|||");
+  if(i < 0) return {say: raw.trim(), state:null};
+  let state = null;
+  try{ state = looseJSON(raw.slice(i + 3)); }catch(e){}
+  return {say: raw.slice(0, i).trim(), state};
+}
+
+function applyState(st){
+  if(!st) return;
+  const cl = (v, f) => (typeof v === "number" && isFinite(v)) ? Math.max(0, Math.min(100, Math.round(v))) : f;
+  S.state.interest = cl(st.interest, S.state.interest);
+  S.state.trust    = cl(st.trust,    S.state.trust);
+  S.state.urgency  = cl(st.urgency,  S.state.urgency);
+  if(st.mood) S.state.mood = String(st.mood).toLowerCase().slice(0,18);
+  $("moodChip").textContent = S.state.mood;
+}
+
+function setBusy(on){
+  S.busy = on;
+  $("pttBtn").disabled = on;
+  $("sendBtn").disabled = on;
+  $("textIn").disabled = on;
+  $("statusChip").textContent = on ? "thinking" : "on call";
+  $("statusChip").className = "chip live";
+}
+
+async function buyerTurn(){
+  setBusy(true);
+  const node = addPending();
+  const sayEl = node.querySelector(".say");
+  let shown = "";
+  try{
+    const raw = await ask(S.turns, {
+      tier:"quick",
+      maxTokens:400,
+      onText: ({text}) => {
+        const i = text.indexOf("|||");
+        shown = (i < 0 ? text : text.slice(0, i)).trim();
+        if(shown) sayEl.textContent = shown;
+      }
+    });
+    node.classList.remove("thinking");
+    const {say, state} = splitReply(raw);
+    const line = say || shown || "…";
+    sayEl.textContent = line;
+    S.turns.push({role:"assistant", content:raw});
+    S.log.push({who:"buyer", text:line, state});
+    applyState(state);
+    S.buyerTurns++;
+    $("turnCount").textContent = S.buyerTurns + " / " + S.cfg.maxTurns + " turns";
+    setBusy(false);
+    await speak(line);
+
+    if(state && state.end) return endCall(state.end);
+    if(S.buyerTurns >= S.cfg.maxTurns){
+      addNote("They are out of time. Wrapping up.");
+      return endCall("stalled");
+    }
+    if(S.inputMode === "text") $("textIn").focus();
+  }catch(e){
+    node.remove();
+    setBusy(false);
+    const d = document.createElement("div");
+    d.className = "err";
+    d.textContent = humanError(e);
+    $("transcript").appendChild(d);
+    d.scrollIntoView({behavior:"smooth", block:"end"});
+  }
+}
+
+function sendSellerLine(text){
+  if(S.busy || S.ended) return;
+  const t = String(text||"").trim();
+  if(!t) return;
+  addTurn("me", t);
+  S.turns.push({role:"user", content:t});
+  S.log.push({who:"me", text:t});
+  $("textIn").value = "";
+  $("heard").textContent = "";
+  buyerTurn();
+}
+
+function tickTimer(){
+  const s = Math.floor((Date.now() - S.started)/1000);
+  $("timer").textContent = String(Math.floor(s/60)).padStart(2,"0") + ":" + String(s%60).padStart(2,"0");
+}
+
+function showSetupErr(msg){
+  const box = document.createElement("div");
+  box.className = "err";
+  box.textContent = msg;
+  $("setupErr").replaceChildren(box);
+}
+
+async function startCall(){
+  const product = $("product").value.trim();
+  const icp = $("icp").value.trim();
+  if(product.length < 12) return showSetupErr("Describe what you're selling in a bit more detail — the buyer needs something real to push back on.");
+  if(!icp) return showSetupErr("Say who you're pitching. The objections depend on it.");
+  if(useProxy && !$("accessCode").value.trim()) return showSetupErr("Enter the access code. Ask whoever sent you the link if you don't have it.");
+  if(!sampleFn && !useProxy && !$("apiKey").value.trim()) return showSetupErr("Paste an Anthropic API key, or open this page as a published Claude artifact to run without one.");
+
+  S.cfg.product = product;
+  S.cfg.icp = icp;
+  $("setupErr").replaceChildren();
+  $("startBtn").disabled = true;
+  $("startBtn").textContent = "Dialling…";
+
+  let scenario;
+  try{
+    scenario = await ask(personaPrompt(), {tier:"default", json:true, maxTokens:1400, schema:SCENARIO_SCHEMA});
+  }catch(e){
+    $("startBtn").disabled = false;
+    $("startBtn").textContent = "Start the call";
+    return showSetupErr(humanError(e));
+  }
+
+  // The man is fixed; only the deal changes.
+  S.persona = Object.assign({}, scenario, {
+    name: CHARACTER.name,
+    role: CHARACTER.role,
+    company: CHARACTER.firm
+  });
+
+  const p = S.persona;
+  if(!p || !p.opening || !p.hiddenReason){
+    $("startBtn").disabled = false;
+    $("startBtn").textContent = "Start the call";
+    return showSetupErr("The buyer didn't come through properly. Try starting the call again.");
+  }
+
+  const start = DIFFICULTY[S.cfg.difficulty].start;
+  S.state.interest = start.interest;
+  S.state.trust = start.trust;
+  S.state.urgency = start.urgency;
+
+  S.turns = [
+    {role:"user", content: buyerRules()},
+    {role:"assistant", content: p.opening + "\n||| " + JSON.stringify({
+      interest:S.state.interest, trust:S.state.trust, urgency:S.state.urgency,
+      mood:"guarded", objection:p.openingObjection || "need", tier:2,
+      revealedHidden:false, note:"opening", end:null
+    })}
+  ];
+
+  $("viewSetup").hidden = true;
+  $("viewCall").hidden = false;
+  $("timer").hidden = false;
+  $("muteBtn").hidden = false;
+  $("statusChip").textContent = "on call";
+  $("statusChip").className = "chip live";
+
+  $("avatar").textContent = (p.name||"?").trim().charAt(0).toUpperCase();
+  $("buyerName").textContent = p.name;
+  $("buyerRole").textContent = p.role + " · " + p.company;
+  $("moodChip").textContent = "guarded";
+
+  if(S.inputMode === "voice"){
+    $("pttBtn").hidden = false;
+  }else{
+    $("textRow").hidden = false;
+    $("switchInput").textContent = "Use voice";
+  }
+
+  S.started = Date.now();
+  S.timerId = setInterval(tickTimer, 1000);
+  S.buyerTurns = 1;
+  $("turnCount").textContent = "1 / " + S.cfg.maxTurns + " turns";
+
+  S.log.push({who:"buyer", text:p.opening, state:{...S.state, note:"opening"}});
+  addTurn("buyer", p.opening);
+  await speak(p.opening);
+  if(S.inputMode === "text") $("textIn").focus();
+}
+
+/* ========================================================================
+   REVIEW
+   ===================================================================== */
+async function endCall(outcome){
+  if(S.ended) return;
+  S.ended = true;
+  clearInterval(S.timerId);
+  try{ speechSynthesis && speechSynthesis.cancel(); }catch(e){}
+  try{ if(rec && recOn) rec.abort(); }catch(e){}
+  $("statusChip").textContent = "reviewing";
+  $("statusChip").className = "chip";
+  $("viewCall").hidden = true;
+  $("viewReview").hidden = false;
+  $("reviewBody").innerHTML = '<div class="loading"><span class="spin"></span><span>Reading the call back…</span></div>';
+  window.scrollTo({top:0, behavior:"smooth"});
+
+  let r = null;
+  try{
+    r = await ask(reviewPrompt(), {tier:"complex", json:true, maxTokens:3200, schema:REVIEW_SCHEMA});
+  }catch(e){
+    const box = document.createElement("div");
+    box.className = "err";
+    box.textContent = humanError(e);
+    const bar = document.createElement("div");
+    bar.className = "endbar";
+    const again = document.createElement("button");
+    again.className = "secondary";
+    again.textContent = "Start over";
+    again.onclick = () => location.reload();
+    bar.appendChild(again);
+    $("reviewBody").replaceChildren(box, bar);
+    return;
+  }
+  renderReview(r, outcome);
+}
+
+const band = n => n >= 7 ? "good" : n >= 4 ? "warn" : "bad";
+const DIM_LABEL = {
+  discovery:"Discovery", objections:"Objection handling",
+  discipline:"Discipline", specificity:"Specificity", control:"Control"
+};
+
+function renderReview(r, fallbackOutcome){
+  const scores = r.scores || {};
+  const keys = ["discovery","objections","discipline","specificity","control"];
+  const nums = keys.map(k => Number(scores[k] && scores[k].score) || 0);
+  const total = Math.round(nums.reduce((a,b)=>a+b,0) / keys.length * 10);
+  const outcome = ["won","lost","stalled"].includes(r.outcome) ? r.outcome
+    : (fallbackOutcome === "won" ? "won" : (fallbackOutcome === "lost" || fallbackOutcome === "ghosted") ? "lost" : "stalled");
+  const outLabel = {won:"Next step agreed", lost:"No deal", stalled:"Stalled"}[outcome];
+  const mins = Math.max(1, Math.round((Date.now() - S.started)/60000));
+  const firstName = String(S.persona.name || "they").split(" ")[0];
+
+  let h = "";
+  h += '<div class="verdict">';
+  h +=   '<div class="verdict-top">';
+  h +=     '<span class="outcome ' + outcome + '">' + esc(outLabel) + '</span>';
+  h +=     '<span class="total">' + total + ' / 100 &nbsp;·&nbsp; ' + S.buyerTurns + ' turns &nbsp;·&nbsp; ~' + mins + ' min</span>';
+  h +=   '</div>';
+  h +=   '<div class="headline">' + esc(r.headline || "") + '</div>';
+
+  h +=   '<div class="reveal">';
+  h +=     '<div class="eyebrow">What ' + esc(firstName) + ' was actually thinking</div>';
+  h +=     '<p>' + esc(S.persona.hiddenReason || "") + '</p>';
+  h +=     '<div class="found" style="color:' + (r.foundHidden ? "var(--good)" : "var(--bad)") + '">' +
+             (r.foundHidden ? "&#10003; You got to it." : "&#10007; You never got near it.") + '</div>';
+  if(r.hiddenComment) h += '<div class="meter-why" style="margin-top:8px">' + esc(r.hiddenComment) + '</div>';
+  h +=   '</div>';
+
+  h +=   '<div class="meters">';
+  keys.forEach(k => {
+    const s = scores[k] || {};
+    const n = Math.max(0, Math.min(10, Number(s.score) || 0));
+    h += '<div>';
+    h +=   '<div class="meter-head"><span class="meter-name">' + DIM_LABEL[k] + '</span><span class="meter-val">' + n + '/10</span></div>';
+    h +=   '<div class="bar"><span class="' + band(n) + '" style="width:' + (n*10) + '%"></span></div>';
+    if(s.why) h += '<div class="meter-why">' + esc(s.why) + '</div>';
+    h += '</div>';
+  });
+  h +=   '</div>';
+  h += '</div>';
+
+  const moments = Array.isArray(r.moments) ? r.moments : [];
+  if(moments.length){
+    h += '<div class="sec-title">Turning points</div>';
+    moments.forEach(m => {
+      const v = ["good","miss","critical"].includes(m.verdict) ? m.verdict : "miss";
+      const tag = {good:"Worked", miss:"Missed", critical:"Cost you the deal"}[v];
+      h += '<div class="moment ' + v + '">';
+      h +=   '<div class="tag">' + tag + '</div>';
+      h +=   '<div class="quote">&ldquo;' + esc(m.quote || "") + '&rdquo;</div>';
+      if(m.why) h += '<div class="why">' + esc(m.why) + '</div>';
+      if(m.better && String(m.better).trim()) h += '<div class="better"><b>Try instead</b>' + esc(m.better) + '</div>';
+      h += '</div>';
+    });
+  }
+
+  const fixes = Array.isArray(r.fixes) ? r.fixes : [];
+  if(fixes.length){
+    h += '<div class="sec-title">Do these next time</div>';
+    h += '<ol class="fixes">' + fixes.map(f => '<li><span>' + esc(f) + '</span></li>').join("") + '</ol>';
+  }
+
+  if(r.drill){
+    h += '<div class="drill"><div class="eyebrow">Your next drill</div><p>' + esc(r.drill) + '</p></div>';
+  }
+
+  h += '<div class="endbar">';
+  h +=   '<button class="primary" id="rerunBtn">Run it again, same brief</button>';
+  h +=   '<button class="secondary" id="newBtn">New call brief</button>';
+  h += '</div>';
+
+  $("reviewBody").innerHTML = h;
+  $("statusChip").textContent = "reviewed";
+  window.scrollTo({top:0, behavior:"smooth"});
+  $("rerunBtn").onclick = () => rerun(true);
+  $("newBtn").onclick = () => rerun(false);
+}
+
+function rerun(keepBrief){
+  // The brief autosaves as you type, so "run it again" needs no work.
+  // "New brief" stores an explicitly empty one, so the local seed doesn't refill it.
+  if(!keepBrief){
+    try{
+      localStorage.setItem("or:brief", JSON.stringify({
+        product:"", icp:"", difficulty:S.cfg.difficulty, maxTurns:S.cfg.maxTurns
+      }));
+    }catch(e){}
+  }
+  location.reload();
+}
+
+/* ========================================================================
+   WIRING
+   ===================================================================== */
+function segWire(id, apply){
+  $(id).addEventListener("click", e => {
+    const b = e.target.closest("button[data-v]");
+    if(!b) return;
+    [...$(id).querySelectorAll("button")].forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+    apply(b.dataset.v);
+  });
+}
+segWire("segDiff", v => { S.cfg.difficulty = v; });
+segWire("segLen",  v => { S.cfg.maxTurns = parseInt(v,10) || 12; });
+
+$("startBtn").addEventListener("click", startCall);
+
+const ptt = $("pttBtn");
+ptt.addEventListener("pointerdown", e => { e.preventDefault(); startListening(); });
+ptt.addEventListener("pointerup", e => { e.preventDefault(); stopListening(); });
+ptt.addEventListener("pointercancel", () => stopListening());
+ptt.addEventListener("pointerleave", () => { if(recOn) stopListening(); });
+
+document.addEventListener("keydown", e => {
+  if(e.code !== "Space" || e.repeat) return;
+  if($("viewCall").hidden || S.inputMode !== "voice") return;
+  const t = e.target.tagName;
+  if(t === "INPUT" || t === "TEXTAREA") return;
+  e.preventDefault();
+  startListening();
+});
+document.addEventListener("keyup", e => {
+  if(e.code !== "Space") return;
+  if($("viewCall").hidden || S.inputMode !== "voice") return;
+  const t = e.target.tagName;
+  if(t === "INPUT" || t === "TEXTAREA") return;
+  e.preventDefault();
+  stopListening();
+});
+
+$("sendBtn").addEventListener("click", () => sendSellerLine($("textIn").value));
+$("textIn").addEventListener("keydown", e => { if(e.key === "Enter") sendSellerLine($("textIn").value); });
+
+$("switchInput").addEventListener("click", () => {
+  if(S.inputMode === "voice"){
+    if(recOn){ try{ rec.abort(); }catch(e){} }
+    S.inputMode = "text";
+    $("pttBtn").hidden = true;
+    $("textRow").hidden = false;
+    $("switchInput").textContent = "Use voice";
+    $("textIn").focus();
+  }else{
+    if(!SR){ addNote("This browser can't do speech recognition — try Chrome or Edge."); return; }
+    S.inputMode = "voice";
+    $("pttBtn").hidden = false;
+    $("textRow").hidden = true;
+    $("switchInput").textContent = "Type instead";
+  }
+});
+
+$("endBtn").addEventListener("click", () => { if(!S.busy) endCall("stalled"); });
+
+$("muteBtn").addEventListener("click", () => {
+  S.muted = !S.muted;
+  $("muteBtn").textContent = S.muted ? "Unmute" : "Mute";
+  if(S.muted){ try{ speechSynthesis.cancel(); }catch(e){} }
+});
+
+/* ---- the brief remembers itself, per browser ---- */
+function saveBrief(){
+  try{
+    localStorage.setItem("or:brief", JSON.stringify({
+      product: $("product").value,
+      icp: $("icp").value,
+      difficulty: S.cfg.difficulty,
+      maxTurns: S.cfg.maxTurns
+    }));
+  }catch(e){}
+}
+
+function applyBrief(b){
+  if(!b) return false;
+  if(b.product) $("product").value = b.product;
+  if(b.icp) $("icp").value = b.icp;
+  if(b.difficulty){
+    S.cfg.difficulty = b.difficulty;
+    [...$("segDiff").querySelectorAll("button")].forEach(x => x.setAttribute("aria-pressed", String(x.dataset.v === b.difficulty)));
+  }
+  if(b.maxTurns){
+    S.cfg.maxTurns = b.maxTurns;
+    [...$("segLen").querySelectorAll("button")].forEach(x => x.setAttribute("aria-pressed", String(Number(x.dataset.v) === b.maxTurns)));
+  }
+  return true;
+}
+
+function loadBrief(){
+  let saved = null;
+  try{ saved = JSON.parse(localStorage.getItem("or:brief") || "null"); }catch(e){}
+  briefRestored = applyBrief(saved);
+  return briefRestored;
+}
+
+["product","icp"].forEach(id => $(id).addEventListener("input", saveBrief));
+$("segDiff").addEventListener("click", saveBrief);
+$("segLen").addEventListener("click", saveBrief);
+
+/* ---- the key, only if asked for, only on this device ---- */
+function saveKey(){
+  try{
+    if($("rememberKey").checked) localStorage.setItem("or:key", $("apiKey").value.trim());
+    else localStorage.removeItem("or:key");
+  }catch(e){}
+}
+function loadKey(){
+  try{
+    const k = localStorage.getItem("or:key");
+    if(k){ $("apiKey").value = k; $("rememberKey").checked = true; }
+  }catch(e){}
+}
+$("rememberKey").addEventListener("change", saveKey);
+$("apiKey").addEventListener("input", saveKey);
+
+/* ---- the access code, for the hosted build ---- */
+function saveCode(){
+  try{
+    if($("rememberCode").checked) localStorage.setItem("or:code", $("accessCode").value.trim());
+    else localStorage.removeItem("or:code");
+  }catch(e){}
+}
+function loadCode(){
+  try{
+    const c = localStorage.getItem("or:code");
+    if(c) $("accessCode").value = c;
+  }catch(e){}
+}
+$("rememberCode").addEventListener("change", saveCode);
+$("accessCode").addEventListener("input", saveCode);
+
+loadBrief();
+loadKey();
+loadCode();
+
+checkMic();
+initBrain();
+</script>

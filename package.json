@@ -1,0 +1,7 @@
+{
+  "name": "objection-room",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A voice sales drill against a buyer who hides his real objection.",
+  "type": "module"
+}
